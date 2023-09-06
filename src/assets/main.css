@@ -1,8 +1,8 @@
 @import './base.css';
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
   padding: 2rem;
 
   font-weight: normal;
@@ -21,15 +21,53 @@ a,
   }
 }
 
+/* 如果宽度小于 300 像素则 */
 @media (min-width: 1024px) {
   body {
-    display: flex;
+    /* display: flex; */
     place-items: center;
   }
 
   #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* display: grid; */
+    /* grid-template-columns: 1fr 1fr; */
     padding: 0 2rem;
+  }
+
+  .router-view-enter-active, .router-view-leave-active {
+    transition: all .4s;
+  }
+  .router-view-enter, .router-view-leave-to {
+    opacity: 0;
+  }
+  
+  .slide-left-enter-active, .slide-right-enter-active {
+    transition: all 0.3s ease;
+  }
+  .slide-left-leave-active, .slide-right-leave-active {
+    transition: all 0.4s ease;
+  }
+  .slide-left-enter, .slide-right-leave-to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  .slide-left-leave-to, .slide-right-enter {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  
+  .slide-top-enter-active {
+    transition: all 0.3s ease;
+  }
+  .slide-top-leave-active {
+    transition: all 0.4s ease;
+  }
+  .slide-top-enter {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  .slide-top-leave-to {
+    transform: translateY(-100%);
+    opacity: 0;
   }
 }

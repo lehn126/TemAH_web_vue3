@@ -1,34 +1,34 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { NDialogProvider, NMessageProvider, NNotificationProvider } from 'naive-ui'
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/alarm">Alarm</RouterLink>
       </nav>
     </div>
   </header>
 
-  <RouterView />
+  <div class="app-view">
+    <NNotificationProvider>
+      <NMessageProvider>
+        <NDialogProvider>
+          <RouterView />
+        </NDialogProvider>
+      </NMessageProvider>
+    </NNotificationProvider>
+  </div>
 </template>
 
 <style scoped>
 header {
   line-height: 1.5;
   max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
 }
 
 nav {
@@ -56,6 +56,13 @@ nav a:first-of-type {
   border: 0;
 }
 
+.app-view {
+  width: 100%;
+  min-height: 100vh;
+  /* display: flex; */
+  align-items: center;
+}
+
 @media (min-width: 1024px) {
   header {
     display: flex;
@@ -75,7 +82,6 @@ nav a:first-of-type {
 
   nav {
     text-align: left;
-    margin-left: -1rem;
     font-size: 1rem;
 
     padding: 1rem 0;
