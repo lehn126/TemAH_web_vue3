@@ -21,7 +21,8 @@
       :loading="isLoading"
       :pagination="pagination"
       @update:page="handlePageChange"
-      v-model:checked-row-keys="selectedRows"
+      @update:sorter="handleSortChange"
+      @update:checked-row-keys="handleSelectionChange"
     />
     <NDropdown
       placement="bottom-start"
@@ -68,6 +69,7 @@ const dropdownOptionsClear = [
 </script>
 <script setup>
 import alarmApi from '../../api/alarm-api'
+import { useOperationAlarmStore } from '../../stores/operation-alarm.js'
 import { NDataTable, NDropdown, useDialog, useMessage, useNotification, NButton } from 'naive-ui'
 import { h, nextTick, ref, reactive, onMounted } from 'vue'
 
@@ -76,6 +78,7 @@ import { h, nextTick, ref, reactive, onMounted } from 'vue'
 const dialog = useDialog()
 const message = useMessage()
 const notification = useNotification()
+const operationAlarmStore = useOperationAlarmStore()
 
 const listData = ref([])
 const selectedRows = ref([])
@@ -108,19 +111,13 @@ const pagination = reactive({
 const idSelectColumn = {
   title: 'ID',
   key: 'id',
-  type: 'selection',
-  sortOrder: true,
-  sorter: true,
-  resizable: true,
-  ellipsis: {
-    tooltip: true
-  }
+  type: 'selection'
 }
 
 const idColumn = {
   title: 'ID',
   key: 'id',
-  sortOrder: true,
+  sortOrder: false,
   sorter: true,
   resizable: true,
   ellipsis: {
@@ -142,7 +139,7 @@ const moColumn = {
 const eventTimeColumn = {
   title: 'EventTime',
   key: 'eventTime',
-  sortOrder: true,
+  sortOrder: false,
   sorter: true,
   resizable: true,
   ellipsis: {
@@ -153,7 +150,7 @@ const eventTimeColumn = {
 const alarmTypeColumn = {
   title: 'AlarmType',
   key: 'alarmType',
-  sortOrder: true,
+  sortOrder: false,
   sorter: true,
   resizable: true,
   ellipsis: {
@@ -164,7 +161,7 @@ const alarmTypeColumn = {
 const perceivedSeverityColumn = {
   title: 'Severity',
   key: 'perceivedSeverity',
-  sortOrder: true,
+  sortOrder: false,
   sorter: true,
   resizable: true,
   ellipsis: {
@@ -175,7 +172,7 @@ const perceivedSeverityColumn = {
 const clearColumn = {
   title: 'clear',
   key: 'clearFlag',
-  sortOrder: true,
+  sortOrder: false,
   sorter: true,
   resizable: true,
   ellipsis: {
@@ -191,7 +188,7 @@ const clearColumn = {
 const terminateStateColumn = {
   title: 'Terminate',
   key: 'terminateState',
-  sortOrder: true,
+  sortOrder: false,
   sorter: true,
   resizable: true,
   ellipsis: {
@@ -214,7 +211,7 @@ const additionalTextColumn = {
   }
 }
 
-const columns = [
+const columns = ref([
   idSelectColumn,
   idColumn,
   moColumn,
@@ -224,7 +221,7 @@ const columns = [
   clearColumn,
   terminateStateColumn,
   additionalTextColumn
-]
+])
 
 const showDropdown = ref(false)
 const x = ref(0)
@@ -237,6 +234,7 @@ function handleDropDownSelect(key, option) {
   showDropdown.value = false
   if (key === 'edit') {
     console.log('edit')
+    operationAlarmStore.setOperationAlarm(dropdownRowData.value)
   } else {
     dialog.warning({
       title: option.label,
@@ -280,22 +278,8 @@ function rowProps(rowData) {
   }
 }
 
-function handleTerminate() {
-  dialog.warning({
-    title: '提示',
-    content: `此操作将Terminate选定的告警, 是否继续?`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: () => {
-      alarmApi.terminateAlarms(notification, selectedRows.value.join(','), () => {
-        // message.success('Terminate操作成功')
-        refreshCurrentPage()
-      })
-    },
-    onNegativeClick: () => {
-      message.info('已取消操作')
-    }
-  })
+function setLoading(val) {
+  isLoading.value = val
 }
 
 function refreshPageData(respData) {
@@ -334,8 +318,44 @@ function handlePageChange(val) {
   gotoPage(val)
 }
 
-function setLoading(val) {
-  isLoading.value = val
+function handleTerminate() {
+  dialog.warning({
+    title: '提示',
+    content: `此操作将Terminate选定的告警, 是否继续?`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      alarmApi.terminateAlarms(notification, selectedRows.value.join(','), () => {
+        // message.success('Terminate操作成功')
+        refreshCurrentPage()
+      })
+    },
+    onNegativeClick: () => {
+      message.info('已取消操作')
+    }
+  })
+}
+
+function handleSortChange(sorter) {
+  sortBy.value = sorter.columnKey
+  sortOrder.value = sorter.order === 'ascend' ? 'asc' : 'desc'
+  // NativeUI 要手动修改排序图标
+  columns.value.forEach((column) => {
+    if (!sorter) {
+      column.sortOrder = false
+      return
+    }
+    if (column.key === sorter.columnKey) {
+      column.sortOrder = sorter.order
+    } else {
+      column.sortOrder = false
+    }
+  })
+  refreshCurrentPage()
+}
+
+function handleSelectionChange(keys) {
+  selectedRows.value = keys
 }
 
 onMounted(() => {
