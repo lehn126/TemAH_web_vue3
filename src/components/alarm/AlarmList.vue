@@ -34,7 +34,7 @@
       :on-clickoutside="handleDropDownClickOutside"
       @select="handleDropDownSelect"
     />
-    <NModal v-model:show="showAlarmEditModel" preset="dialog" style="width: auto;">
+    <NModal v-model:show="showAlarmEditModel" preset="dialog" style="width: auto">
       <template #header>
         <div>编辑</div>
       </template>
@@ -57,29 +57,20 @@ export default {
   name: 'AlarmList'
 }
 
-const dropdownOptionsNoClear = [
-  {
-    label: '编辑',
-    key: 'edit'
-  },
-  {
-    label: () => h('span', { style: { color: 'red' } }, 'Clear'),
-    key: 'clear',
-    show: false
-  }
-]
-
-const dropdownOptionsClear = [
-  {
-    label: '编辑',
-    key: 'edit'
-  },
-  {
-    label: () => h('span', { style: { color: 'red' } }, 'Clear'),
-    key: 'clear',
-    show: true
-  }
-]
+function computeDropdownOptions(enableOption) {
+  return [
+    {
+      label: '编辑',
+      key: 'edit',
+      show: Boolean(enableOption?.editAble)
+    },
+    {
+      label: () => h('span', { style: { color: 'red' } }, 'Clear'),
+      key: 'clear',
+      show: Boolean(enableOption?.clearAble)
+    }
+  ]
+}
 </script>
 <script setup>
 import alarmApi from '../../api/alarm-api'
@@ -249,7 +240,7 @@ const x = ref(0)
 const y = ref(0)
 const dropdownRowData = ref(null)
 
-let dropdownOptions = ref(dropdownOptionsClear)
+let dropdownOptions = ref([])
 
 function handleDropDownSelect(key, option) {
   showDropdown.value = false
@@ -289,8 +280,10 @@ function rowProps(rowData) {
       showDropdown.value = false
       nextTick().then(() => {
         // 如果已经clear则去掉clear选项
-        dropdownOptions.value =
-          rowData.clearFlag === 0 ? dropdownOptionsClear : dropdownOptionsNoClear
+        dropdownOptions.value = computeDropdownOptions({
+          editAble: true,
+          clearAble: rowData.clearFlag === 0
+        })
         showDropdown.value = true
         x.value = e.clientX
         y.value = e.clientY
