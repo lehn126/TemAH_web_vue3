@@ -34,6 +34,20 @@
       :on-clickoutside="handleDropDownClickOutside"
       @select="handleDropDownSelect"
     />
+    <NModal v-model:show="showAlarmEditModel" preset="dialog" style="width: auto;">
+      <template #header>
+        <div>编辑</div>
+      </template>
+      <div>
+        <AlarmEdit
+          ref="alarmEditCom"
+          :is-create="false"
+          :init-disabled="alarmEditComInitDisabled"
+          :init-data="editAlarmData"
+          @submit-edit="handleSubmitEdit"
+        ></AlarmEdit>
+      </div>
+    </NModal>
   </div>
 </template>
 <script>
@@ -69,11 +83,18 @@ const dropdownOptionsClear = [
 </script>
 <script setup>
 import alarmApi from '../../api/alarm-api'
+import AlarmEdit from '../../components/alarm/AlarmEdit.vue'
 import { useOperationAlarmStore } from '../../stores/operation-alarm.js'
-import { NDataTable, NDropdown, useDialog, useMessage, useNotification, NButton } from 'naive-ui'
+import {
+  NDataTable,
+  NDropdown,
+  NModal,
+  useDialog,
+  useMessage,
+  useNotification,
+  NButton
+} from 'naive-ui'
 import { h, nextTick, ref, reactive, onMounted } from 'vue'
-
-// const emit = defineEmits(['alarm-dblclick']);
 
 const dialog = useDialog()
 const message = useMessage()
@@ -233,8 +254,8 @@ let dropdownOptions = ref(dropdownOptionsClear)
 function handleDropDownSelect(key, option) {
   showDropdown.value = false
   if (key === 'edit') {
-    console.log('edit')
     operationAlarmStore.setOperationAlarm(dropdownRowData.value)
+    editAlarm()
   } else {
     dialog.warning({
       title: option.label,
@@ -292,14 +313,8 @@ function refreshPageData(respData) {
 }
 
 function gotoPage(val) {
-  alarmApi.getAll(
-    notification.value,
-    val,
-    pageSize.value,
-    sortBy.value,
-    sortOrder.value,
-    refreshPageData
-  )
+  closeAlarmEditModel()
+  alarmApi.getAll(notification, val, pageSize.value, sortBy.value, sortOrder.value, refreshPageData)
 }
 
 function refreshCurrentPage() {
@@ -362,5 +377,56 @@ onMounted(() => {
   setLoading(true)
   gotoPage(1)
 })
+
+const showAlarmEditModel = ref(false)
+const alarmEditCom = ref(null)
+const editAlarmData = ref(null)
+const alarmEditComInitDisabled = ref(true)
+function openAlarmEditModel(initEnabled) {
+  alarmEditComInitDisabled.value =
+    initEnabled === undefined || initEnabled == null ? true : !initEnabled
+  showAlarmEditModel.value = true
+}
+function closeAlarmEditModel() {
+  alarmEditComInitDisabled.value = true
+  showAlarmEditModel.value = false
+}
+function editAlarm() {
+  const alarmId = dropdownRowData.value?.id
+  if (alarmId) {
+    // 如果store里有那么就拿来先填界面，然后请求restful API获取
+    // 如果store中的alarm和请求的id不一样，请求restful API获取
+    const operationAlarm = operationAlarmStore.operationAlarm
+    const storeAlarmId = operationAlarm?.id
+    if (alarmId === storeAlarmId) {
+      editAlarmData.value = operationAlarm
+      openAlarmEditModel(true)
+    } else {
+      editAlarmData.value = null
+      openAlarmEditModel(false)
+      alarmApi.getAlarm(notification, alarmId, (response) => {
+        const respData = response.data
+        operationAlarmStore.setOperationAlarm(respData)
+        editAlarmData.value = respData
+        alarmEditCom.value.enable()
+      })
+    }
+  } else {
+    notification.error({
+      title: '告警ID不能为空',
+      message: '操作失败, 请求的告警ID不能为空',
+      duration: 3000
+    })
+  }
+}
+function handleSubmitEdit(alarm) {
+  if (alarm) {
+    alarmApi.updateAlarm(notification, alarm, () => {
+      closeAlarmEditModel()
+      alarmEditCom.value.enable()
+      refreshCurrentPage()
+    })
+  }
+}
 </script>
 <style></style>

@@ -2,11 +2,7 @@
   <div>
     <AlarmTabs :tabs="tabs" v-model:current-tab="currentTab">
       <transition name="slide-right" mode="out-in" appear>
-        <component
-          :is="currentTabCom"
-          @alarm-dblclick="handleRowDblclick"
-          class="tag-views"
-        ></component>
+        <component :is="currentTabCom" class="tag-views"></component>
       </transition>
     </AlarmTabs>
   </div>
@@ -36,12 +32,6 @@ const tabComponents = {
 const currentTabCom = computed(() => {
   return tabComponents[currentTab.value]
 })
-
-function handleRowDblclick(row) {
-  console.log(row)
-  //this.$store.dispatch('setOperationAlarm', row);
-  //this.$router.push({ name: 'alarmEdit', params: { id: row.id } });
-}
 </script>
 <style scoped>
 .tag-views {

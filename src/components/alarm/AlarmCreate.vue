@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="alarm-create-container">
     <AlarmEdit ref="alarmEditCom" :is-create="true" @submit-edit="submitCreate"></AlarmEdit>
   </div>
 </template>
@@ -31,4 +31,8 @@ onMounted(() => {
     alarmEditCom.value.enable();
 })
 </script>
-<style></style>
+<style scoped>
+.alarm-create-container {
+  margin-top: 16px;
+}
+</style>

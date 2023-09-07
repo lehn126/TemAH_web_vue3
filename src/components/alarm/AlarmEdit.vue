@@ -7,7 +7,7 @@
       :rules="rules"
       label-placement="left"
       label-width="auto"
-      style="min-width: 400px;"
+      style="min-width: 460px"
     >
       <NFormItem v-if="!isCreateModel" path="id" label="AlarmID">
         <NInput disabled v-model:value="formData.id" @keydown.enter.prevent></NInput>
@@ -59,18 +59,16 @@
 <script>
 // 根据props传入的数据初始化form内的数据
 function computeInitData(newData) {
-  console.log(getFieldValue(newData, 'additionalText', ''))
-
   return {
-    id: getFieldValue(newData, 'id', ''),
+    id: String(getFieldValue(newData, 'id', '')),
     managedObject: getFieldValue(newData, 'managedObject', ''),
     eventTime: new Date(getFieldValue(newData, 'eventTime', Date.now())).getTime(),
     alarmType: getFieldValue(newData, 'alarmType', ''),
     perceivedSeverity: getFieldValue(newData, 'perceivedSeverity', ''),
     probableCause: getFieldValue(newData, 'probableCause', ''),
     specificProblem: getFieldValue(newData, 'specificProblem', ''),
-    clearFlag: getFieldValue(newData, 'clearFlag', false),
-    terminateState: getFieldValue(newData, 'terminateState', false),
+    clearFlag: getFieldValue(newData, 'clearFlag', false) !== 0,
+    terminateState: getFieldValue(newData, 'terminateState', false) !== 0,
     additionalText: getFieldValue(newData, 'additionalText', '')
   }
 }
@@ -123,25 +121,29 @@ const props = defineProps({
   initData: {
     required: false,
     type: Object
+  },
+  initDisabled: {
+    required: false,
+    type: Boolean
   }
 })
 
 const emit = defineEmits(['submit-edit'])
 
 const isCreateModel = ref(props.isCreate ? true : false)
-const isDisabled = ref(false)
+const isDisabled = ref(props.initDisabled)
 const submitButtonValue = ref(props.isCreate ? '立即创建' : '提交修改')
 
 const formData = ref({
-  id: getFieldValue(props.initData, 'id', ''),
+  id: String(getFieldValue(props.initData, 'id', '')),
   managedObject: getFieldValue(props.initData, 'managedObject', ''),
   eventTime: new Date(getFieldValue(props.initData, 'eventTime', Date.now())).getTime(),
   alarmType: getFieldValue(props.initData, 'alarmType', ''),
   perceivedSeverity: getFieldValue(props.initData, 'perceivedSeverity', ''),
   probableCause: getFieldValue(props.initData, 'probableCause', ''),
   specificProblem: getFieldValue(props.initData, 'specificProblem', ''),
-  clearFlag: getFieldValue(props.initData, 'clearFlag', false),
-  terminateState: getFieldValue(props.initData, 'terminateState', false),
+  clearFlag: getFieldValue(props.initData, 'clearFlag', false) !== 0,
+  terminateState: getFieldValue(props.initData, 'terminateState', false) !== 0,
   additionalText: getFieldValue(props.initData, 'additionalText', '')
 })
 
@@ -221,13 +223,13 @@ const rules = {
 function submitForm() {
   ruleForm.value?.validate((errors) => {
     if (!errors) {
-      message.success('Valid')
+      message.success('提交成功')
       disable()
       const alarmData = transformAlarmData(formData.value)
       emit('submit-edit', alarmData)
     } else {
       console.log(errors)
-      message.error('Invalid')
+      message.error('提交失败')
     }
   })
 }
