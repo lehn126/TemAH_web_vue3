@@ -17,7 +17,7 @@
 </template>
 <script>
 export default {
-  name: 'MyTab'
+  name: 'BaseTabs'
 }
 </script>
 <script setup>
@@ -36,14 +36,11 @@ function handleTabClick(value) {
   display: flex;
   border: 1px solid #67c23a;
   border-radius: 3px;
+  padding: 8px;
 }
 
 .tabs {
   width: auto;
-  min-width: 120px;
-  max-width: 200px;
-  padding: 0 8px 0 8px;
-  margin: 8px 0 8px 0;
 }
 
 .tabContainer {
@@ -51,5 +48,6 @@ function handleTabClick(value) {
   width: 100%;
   justify-content: center;
   /* align-items: center; */
+  margin-left: 8px;
 }
 </style>

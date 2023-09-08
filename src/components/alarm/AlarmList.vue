@@ -51,23 +51,23 @@
   </div>
 </template>
 <script>
-const PAGE_SIZE = 10
-
 export default {
   name: 'AlarmList'
 }
 
-function computeDropdownOptions(enableOption) {
+function computeDropdownOptions(rowData) {
+  // 如果已经clear则去掉clear选项
+  const isClearAble = rowData.clearFlag === 0
   return [
     {
       label: '编辑',
       key: 'edit',
-      show: Boolean(enableOption?.editAble)
+      show: true
     },
     {
       label: () => h('span', { style: { color: 'red' } }, 'Clear'),
       key: 'clear',
-      show: Boolean(enableOption?.clearAble)
+      show: isClearAble
     }
   ]
 }
@@ -75,7 +75,7 @@ function computeDropdownOptions(enableOption) {
 <script setup>
 import alarmApi from '../../api/alarm-api'
 import AlarmEdit from '../../components/alarm/AlarmEdit.vue'
-import { useOperationAlarmStore } from '../../stores/operation-alarm.js'
+import { useOperationAlarmStore } from '../../stores/operation-alarm'
 import {
   NDataTable,
   NDropdown,
@@ -92,6 +92,8 @@ const message = useMessage()
 const notification = useNotification()
 const operationAlarmStore = useOperationAlarmStore()
 
+// 分页相关开始
+const PAGE_SIZE = 10
 const listData = ref([])
 const selectedRows = ref([])
 const maxCount = ref(0)
@@ -125,6 +127,63 @@ const idSelectColumn = {
   key: 'id',
   type: 'selection'
 }
+
+function setLoading(val) {
+  isLoading.value = val
+}
+
+function refreshPageData(respData) {
+  listData.value = respData.data.pageData
+  maxCount.value = respData.data.maxCount
+  maxPage.value = respData.data.maxPage
+  pageIndex.value = respData.data.pageIndex
+  pageSize.value = respData.data.pageSize
+  setLoading(false)
+}
+
+function gotoPage(val) {
+  closeAlarmEditModel()
+  alarmApi.getAll(notification, val, pageSize.value, sortBy.value, sortOrder.value, refreshPageData)
+}
+
+function refreshCurrentPage() {
+  alarmApi.getAll(
+    notification,
+    pageIndex.value,
+    pageSize.value,
+    sortBy.value,
+    sortOrder.value,
+    refreshPageData
+  )
+}
+
+function handlePageChange(val) {
+  setLoading(true)
+  gotoPage(val)
+}
+
+function handleSelectionChange(keys) {
+  selectedRows.value = keys
+}
+
+function handleSortChange(sorter) {
+  sortBy.value = sorter.columnKey
+  sortOrder.value = sorter.order === 'ascend' ? 'asc' : 'desc'
+  // NativeUI 要手动修改排序图标
+  columns.value.forEach((column) => {
+    if (!sorter) {
+      column.sortOrder = false
+      return
+    }
+    if (column.key === sorter.columnKey) {
+      column.sortOrder = sorter.order
+    } else {
+      column.sortOrder = false
+    }
+  })
+  refreshCurrentPage()
+}
+// 分页相关结束
 
 const idColumn = {
   title: 'ID',
@@ -235,6 +294,7 @@ const columns = ref([
   additionalTextColumn
 ])
 
+// 下拉菜单相关开始
 const showDropdown = ref(false)
 const x = ref(0)
 const y = ref(0)
@@ -242,6 +302,23 @@ const dropdownRowData = ref(null)
 
 let dropdownOptions = ref([])
 
+function rowProps(rowData) {
+  return {
+    onContextmenu: (e) => {
+      dropdownRowData.value = rowData
+      e.preventDefault()
+      showDropdown.value = false
+      nextTick().then(() => {
+        dropdownOptions.value = computeDropdownOptions(rowData)
+        showDropdown.value = true
+        x.value = e.clientX
+        y.value = e.clientY
+      })
+    }
+  }
+}
+
+// 右键点击后执行这里return的onContextmenu方法内容
 function handleDropDownSelect(key, option) {
   showDropdown.value = false
   if (key === 'edit') {
@@ -267,64 +344,12 @@ function handleDropDownSelect(key, option) {
     })
   }
 }
+
 function handleDropDownClickOutside() {
   showDropdown.value = false
   dropdownRowData.value = null
 }
-
-function rowProps(rowData) {
-  return {
-    onContextmenu: (e) => {
-      dropdownRowData.value = rowData
-      e.preventDefault()
-      showDropdown.value = false
-      nextTick().then(() => {
-        // 如果已经clear则去掉clear选项
-        dropdownOptions.value = computeDropdownOptions({
-          editAble: true,
-          clearAble: rowData.clearFlag === 0
-        })
-        showDropdown.value = true
-        x.value = e.clientX
-        y.value = e.clientY
-      })
-    }
-  }
-}
-
-function setLoading(val) {
-  isLoading.value = val
-}
-
-function refreshPageData(respData) {
-  listData.value = respData.data.pageData
-  maxCount.value = respData.data.maxCount
-  maxPage.value = respData.data.maxPage
-  pageIndex.value = respData.data.pageIndex
-  pageSize.value = respData.data.pageSize
-  setLoading(false)
-}
-
-function gotoPage(val) {
-  closeAlarmEditModel()
-  alarmApi.getAll(notification, val, pageSize.value, sortBy.value, sortOrder.value, refreshPageData)
-}
-
-function refreshCurrentPage() {
-  alarmApi.getAll(
-    notification,
-    pageIndex.value,
-    pageSize.value,
-    sortBy.value,
-    sortOrder.value,
-    refreshPageData
-  )
-}
-
-function handlePageChange(val) {
-  setLoading(true)
-  gotoPage(val)
-}
+// 下拉菜单相关结束
 
 function handleTerminate() {
   dialog.warning({
@@ -344,33 +369,12 @@ function handleTerminate() {
   })
 }
 
-function handleSortChange(sorter) {
-  sortBy.value = sorter.columnKey
-  sortOrder.value = sorter.order === 'ascend' ? 'asc' : 'desc'
-  // NativeUI 要手动修改排序图标
-  columns.value.forEach((column) => {
-    if (!sorter) {
-      column.sortOrder = false
-      return
-    }
-    if (column.key === sorter.columnKey) {
-      column.sortOrder = sorter.order
-    } else {
-      column.sortOrder = false
-    }
-  })
-  refreshCurrentPage()
-}
-
-function handleSelectionChange(keys) {
-  selectedRows.value = keys
-}
-
 onMounted(() => {
   setLoading(true)
   gotoPage(1)
 })
 
+// 编辑界面相关开始
 const showAlarmEditModel = ref(false)
 const alarmEditCom = ref(null)
 const editAlarmData = ref(null)
@@ -421,5 +425,6 @@ function handleSubmitEdit(alarm) {
     })
   }
 }
+// 编辑界面相关结束
 </script>
 <style></style>

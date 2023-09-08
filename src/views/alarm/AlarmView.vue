@@ -1,10 +1,10 @@
 <template>
   <div>
-    <AlarmTabs :tabs="tabs" v-model:current-tab="currentTab">
+    <BaseTabs :tabs="tabs" v-model:current-tab="currentTab">
       <transition name="slide-right" mode="out-in" appear>
         <component :is="currentTabCom" class="tag-views"></component>
       </transition>
-    </AlarmTabs>
+    </BaseTabs>
   </div>
 </template>
 <script>
@@ -14,7 +14,7 @@ export default {
 </script>
 <script setup>
 import { ref, computed } from 'vue'
-import AlarmTabs from '../../components/alarm/AlarmTabs.vue'
+import BaseTabs from '../../components/base/BaseTabs.vue'
 import AlarmList from '../../components/alarm/AlarmList.vue'
 import AlarmCreate from '../../components/alarm/AlarmCreate.vue'
 
@@ -35,7 +35,6 @@ const currentTabCom = computed(() => {
 </script>
 <style scoped>
 .tag-views {
-  padding: 8px 8px 8px 0;
   transition: all 0.4s ease;
 }
 </style>

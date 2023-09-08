@@ -9,7 +9,8 @@ import { NDialogProvider, NMessageProvider, NNotificationProvider } from 'naive-
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/alarm">Alarm</RouterLink>
+        <RouterLink :to="{ name: 'alarm' }">告警管理</RouterLink>
+        <RouterLink to="/task">任务管理</RouterLink>
       </nav>
     </div>
   </header>
