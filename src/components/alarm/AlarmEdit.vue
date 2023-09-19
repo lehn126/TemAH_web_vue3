@@ -67,8 +67,8 @@ function computeInitData(newData) {
     perceivedSeverity: getFieldValue(newData, 'perceivedSeverity', ''),
     probableCause: getFieldValue(newData, 'probableCause', ''),
     specificProblem: getFieldValue(newData, 'specificProblem', ''),
-    clearFlag: getFieldValue(newData, 'clearFlag', false) !== 0,
-    terminateState: getFieldValue(newData, 'terminateState', false) !== 0,
+    clearFlag: getFieldValue(newData, 'clearFlag', 0) !== 0,
+    terminateState: getFieldValue(newData, 'terminateState', 0) !== 0,
     additionalText: getFieldValue(newData, 'additionalText', '')
   }
 }
@@ -76,7 +76,7 @@ function computeInitData(newData) {
 // 转换form data为alarm dto使用的格式
 function transformAlarmData(formData) {
   const alarmData = {
-    id: formData.id === '' ? null : parseInt(formData.id, 10),
+    id: formData.id === '' ? null : formData.id,
     managedObject: formData.managedObject,
     eventTime: formatRFC3339(new Date(formData.eventTime), { fractionDigits: 3 }),
     alarmType: formData.alarmType,
@@ -142,8 +142,8 @@ const formData = ref({
   perceivedSeverity: getFieldValue(props.initData, 'perceivedSeverity', ''),
   probableCause: getFieldValue(props.initData, 'probableCause', ''),
   specificProblem: getFieldValue(props.initData, 'specificProblem', ''),
-  clearFlag: getFieldValue(props.initData, 'clearFlag', false) !== 0,
-  terminateState: getFieldValue(props.initData, 'terminateState', false) !== 0,
+  clearFlag: getFieldValue(props.initData, 'clearFlag', 0) !== 0,
+  terminateState: getFieldValue(props.initData, 'terminateState', 0) !== 0,
   additionalText: getFieldValue(props.initData, 'additionalText', '')
 })
 

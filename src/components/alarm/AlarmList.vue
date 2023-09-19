@@ -133,7 +133,13 @@ function setLoading(val) {
 }
 
 function refreshPageData(respData) {
-  listData.value = respData.data.pageData
+  const data = respData.data.pageData
+  if (data != null) {
+    listData.value = data
+  } else {
+    listData.value = []
+  }
+
   maxCount.value = respData.data.maxCount
   maxPage.value = respData.data.maxPage
   pageIndex.value = respData.data.pageIndex
